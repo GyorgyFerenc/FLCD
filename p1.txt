@@ -1,0 +1,13 @@
+let a i32;
+let b i32;
+
+read(a.&);
+read(b.&);
+
+let c i32;
+if a < b {
+    c = a;
+} else do
+    c = b;
+
+print(c);
