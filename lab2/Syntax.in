@@ -1,6 +1,6 @@
 program = {statement}.
 statement = variable_declaration | block | if | for | read | print | expression_statement.
-variable_declaration = "let" identifier type ";".
+variable_declaration = "let" identifier (type | [type] "=" expression ) ";".
 type = "i32" | "bool" | array_type.
 array_type = "[]" type.
 if = "if" expression block.
