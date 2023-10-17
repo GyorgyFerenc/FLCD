@@ -1,5 +1,5 @@
 let number i32;
-read(number.&);
+read(&number);
 
 let is_prime = true;
 

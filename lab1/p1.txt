@@ -1,8 +1,8 @@
 let a i32;
 let b i32;
 
-read(a.&);
-read(b.&);
+read(&a);
+read(&b);
 
 let c i32;
 if a < b {
