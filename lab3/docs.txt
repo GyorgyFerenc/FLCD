@@ -1,0 +1,27 @@
+link: https://github.com/GyorgyFerenc/FLCD
+
+The Symbol table consists of two hash tables, one for identifiers and one for constants.
+
+Hash_Table:
+    - It is a dynamicly growing hash table for hashing strings.
+    - After each growth the previous indexes for the inserted strings remain VALID.
+
+    Functions:
+        static Hash_Table create(usize capacity) 
+            - It creates a hash table with the specified initial capacity.
+
+        void destroy()
+            - It destroys the hash table.
+
+        usize add(std::string str)
+            - It adds the string into the hash table.
+            It uses == operator to check if the same string is already added.
+            It holds them uniquely there will be no duplicates
+            It returns the index where the string is put, for a fast retrieval.
+            Growths the table if needed.
+            Growing does NOT invalided the indexes previously returned.
+
+        std::string get(usize index)
+            - It returns the string contained at the index.
+            The index is remain VALID even if the table growths.
+
