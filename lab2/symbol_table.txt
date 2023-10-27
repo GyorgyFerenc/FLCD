@@ -1,0 +1,2 @@
+symbol table:
+    1.b

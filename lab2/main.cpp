@@ -147,10 +147,74 @@ struct Symbol_Table{
     }
 };
 
-struct Lexer{
-    Symbol_Table table;
-};
+void hash_table_test(){
+    let table = Hash_Table::create(10);
+    let check = [&table](std::string str){
+        let index = table.add(str);
+        assert(table.get(index) == str);
+    };
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("ment");
+    check("a");
+    check("kis");
+    check("kertbe");
 
+    table.destroy();
+}
+
+
+void hash_table_test2(){
+    let table = Hash_Table::create(1);
+    let check = [&table](std::string str){
+        let index = table.add(str);
+        assert(table.get(index) == str);
+        return index;
+    };
+    let first  = check("Kecske");
+    let second = check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("ment");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("ment");
+    check("ment");
+    check("a");
+    check("kis");
+    check("kertbe");
+    let third = check("Kecske");
+    check("Kecske");
+    check("Kecske");
+    check("Kecske");
+
+    // first should be valid even if the table growths
+    assert(table.get(first) == "Kecske");
+    assert(first == second);
+    assert(first == third);
+    assert(second == third);
+
+    table.destroy();
+}
 
 int main(){
+    hash_table_test();
+    hash_table_test2();
 }
