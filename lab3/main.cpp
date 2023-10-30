@@ -4,8 +4,10 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #define let   auto
 using usize = size_t;
@@ -150,26 +152,12 @@ struct Symbol_Table{
 };
 
 
-//operator = prefix_operator | infix_operator.
-//prefix_operator = "!" | "&".
-//infix_operator = "+" | "-" | "*" | "/" | "=" | "<" | ">" | "<=" | ">=" | "==" | "%".
-//separator = ";" | "{" | "}" | "(" | ")" | "[" | "]" | ",".
-//reserved_words = "let" | "if" | "else" | "do" | "for" | "i32" | "bool" | "in" | "read" | "print" | "true" | "false".
-//comment = "/*" any {comment} "*/" (* comments are ignored *).
-//any = (* anything in the alphabet *).
-//letter     = "A" | ... | "Z" | "a" | ... | "z".
-//non_zero_digit = "1" | ... | "9".
-//digit      = "0" | non_zero_digit.
-//identifier = character {letter | digit} (* no more than 256 characters *).
-//integer_constant = 0 | ["+" | "-"] non_zero_digit {digit}.
-//bool_constant = "true" | "false".
-
 struct Token{
     enum class Kind{
         End_Of_File,
 
         Identifer,
-        Constasnt,
+        Constant,
 
         Operator_Not, // !
         Operator_Reference, // &
@@ -182,8 +170,18 @@ struct Token{
         Operator_Greater, // >
         Operator_Smaller_Equal, // <=
         Operator_Greater_Equal, // >=
+        Operator_Not_Equal, // != 
         Operator_Equal, // == 
         Operator_Modulo, // %
+
+        Separator_Semicolon, // ;
+        Separator_Curly_Open, // {
+        Separator_Curly_Close, // }
+        Separator_Round_Open, // (
+        Separator_Round_Close, // )
+        Separator_Square_Open, // [
+        Separator_Square_Close, //]
+        Separator_Comma, // ,
 
         Keyword_Let,
         Keyword_If,
@@ -198,6 +196,7 @@ struct Token{
         Keyword_True,
         Keyword_False,
     } kind;
+    std::string str;
 
     union {
         struct {
@@ -207,13 +206,15 @@ struct Token{
             usize id;
         } constant;
     };
+
 };
 
+using PIF = std::vector<Token>;
 
 struct Scanner{
     Symbol_Table table;
     std::string source;
-    std::vector<Token> pif;
+    PIF   pif;
     char  current        = 0;
     char  peek           = 0;
     usize source_index   = 0;
@@ -234,22 +235,24 @@ Scanner create(std::string source){
 }
 
 
-#define SCAN_ONE(c, k)           \
-        {                         \
-            if (current == c){    \
-                pif.push_back({   \
-                    .kind = k,    \
-                });               \
-                next();           \
-                continue;         \
-            }                     \
-        }                         \
+#define SCAN_ONE(c, k)                         \
+        {                                      \
+            if (current == c){                 \
+                pif.push_back({                \
+                    .kind = k,                 \
+                    .str = std::string{c},   \
+                });                            \
+                next();                        \
+                continue;                      \
+            }                                  \
+        }                                      \
 
 #define SCAN_TWO(c, p, k)                      \
         {                                      \
             if (current == c && peek == p){    \
                 pif.push_back({                \
                     .kind = k,                 \
+                    .str = std::string{c, p},  \
                 });                            \
                 next(2);                       \
                 continue;                      \
@@ -261,6 +264,7 @@ Scanner create(std::string source){
             if (str == expected){       \
                 pif.push_back({         \
                     .kind = k,          \
+                    .str = str,         \
                 });                     \
                 continue;               \
             }                           \
@@ -278,7 +282,9 @@ void all(){
         }
         SCAN_TWO('<', '=', Token::Kind::Operator_Smaller_Equal);
         SCAN_TWO('>', '=', Token::Kind::Operator_Greater_Equal);
+        SCAN_TWO('!', '=', Token::Kind::Operator_Not_Equal);
         SCAN_TWO('=', '=', Token::Kind::Operator_Equal);
+
         SCAN_ONE('!',      Token::Kind::Operator_Not);
         SCAN_ONE('&',      Token::Kind::Operator_Reference);
         SCAN_ONE('+',      Token::Kind::Operator_Plus);
@@ -290,13 +296,21 @@ void all(){
         SCAN_ONE('>',      Token::Kind::Operator_Greater);
         SCAN_ONE('%',      Token::Kind::Operator_Modulo);
 
+        SCAN_ONE(';',      Token::Kind::Separator_Semicolon);
+        SCAN_ONE('{',      Token::Kind::Separator_Curly_Open);
+        SCAN_ONE('}',      Token::Kind::Separator_Curly_Close);
+        SCAN_ONE('(',      Token::Kind::Separator_Round_Open);
+        SCAN_ONE(')',      Token::Kind::Separator_Round_Close);
+        SCAN_ONE('[',      Token::Kind::Separator_Square_Open);
+        SCAN_ONE(']',      Token::Kind::Separator_Square_Close);
+        SCAN_ONE(',',      Token::Kind::Separator_Comma);
+
         std::string str = "";
         while (!is_separator_or_operator(current)) {
             str += current;
             next();
         }
 
-//reserved_words = "let" | "if" | "else" | "do" | "for" | "i32" | "bool" | "in" | "read" | "print" | "true" | "false".
         SCAN_KEYWORD(str, "let",   Token::Kind::Keyword_Let);
         SCAN_KEYWORD(str, "if",    Token::Kind::Keyword_If);
         SCAN_KEYWORD(str, "else",  Token::Kind::Keyword_Else);
@@ -307,10 +321,56 @@ void all(){
         SCAN_KEYWORD(str, "in",    Token::Kind::Keyword_In);
         SCAN_KEYWORD(str, "read",  Token::Kind::Keyword_Read);
         SCAN_KEYWORD(str, "print", Token::Kind::Keyword_Print);
-        SCAN_KEYWORD(str, "true",  Token::Kind::Keyword_True);
-        SCAN_KEYWORD(str, "false", Token::Kind::Keyword_False);
 
-        lexical_error();
+        //SCAN_KEYWORD(str, "true",  Token::Kind::Keyword_True);
+        //SCAN_KEYWORD(str, "false", Token::Kind::Keyword_False);
+
+        { // bool constant
+            if (str == "true" || str == "false"){
+                let index = table.constants.add(str);
+                pif.push_back({
+                    .kind = Token::Kind::Constant,
+                    .str = str,
+                    .constant = {
+                        .id = index,
+                    },
+                });
+                continue;
+            }
+        }
+
+        { // integer constant
+            std::regex int_constant{"0|[+-]?[1-9][0-9]*"};
+            let is_match = std::regex_match(str, int_constant);
+            if (is_match) {
+                let index = table.constants.add(str);
+                pif.push_back({
+                    .kind = Token::Kind::Constant,
+                    .str = str,
+                    .constant = {
+                        .id = index,
+                    },
+                });
+                continue;
+            }
+        }
+        { // identifier
+            std::regex identifier{"[A-Za-z_][A-Za-z_0-9]*"};
+            let is_match = std::regex_match(str, identifier);
+            if (is_match) {
+                let index = table.identifiers.add(str);
+                pif.push_back({
+                    .kind = Token::Kind::Identifer,
+                    .str = str,
+                    .identifier = {
+                        .id = index,
+                    },
+                });
+                continue;
+            }
+        }
+
+        lexical_error(str);
     }
 }
 
@@ -372,8 +432,14 @@ void skip_whitespace(){
     }
 }
 
-void lexical_error(){
-    std::cout << "Lexical error (implement line)" << std::endl;
+void lexical_error(std::string str){
+    usize line = 1;
+    for (usize i = 0; i < this->source_index; i++) {
+        if (this->source[i] == '\n'){
+            line++;
+        }
+    }
+    std::cout << "Lexical error at line " << line << " at token: " << str << std::endl;
     exit(-1);
 }
 
@@ -381,8 +447,28 @@ void lexical_error(){
 };
 
 
-int main(){
-    let scanner = Scanner::create("for in let i32 bool== = < = <= >= !& \n /  ");
+void print_pif(PIF pif){
+    for (let token : pif){
+        std::cout << "Token{" << std::endl;
+        std::cout << "    .kind = " << (usize)token.kind << std::endl;
+        std::cout << "    .str  = \"" << token.str << "\"" << std::endl;
+        std::cout << "}" << std::endl;
+    }
+}
+
+int main(int argc, char** argv){
+    if (argc == 1){
+        let scanner = Scanner::create(" let a = 12;");
+        scanner.all();
+        print_pif(scanner.pif);
+        return 0;
+    }
+
+    std::ifstream input{argv[1]};
+    std::stringstream buffer;
+    buffer << input.rdbuf();
+    let source = buffer.str();
+    let scanner = Scanner::create(source);
     scanner.all();
-    std::cout << scanner.pif.size() << std::endl;
+    print_pif(scanner.pif);
 }
