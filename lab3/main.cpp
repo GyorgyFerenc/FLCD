@@ -1,12 +1,14 @@
+#include <cctype>
 #include <cstdint>
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <vector>
 
-#define usize size_t
 #define let   auto
+using usize = size_t;
 using u8 = uint8_t;
 
 template <class T>
@@ -147,10 +149,240 @@ struct Symbol_Table{
     }
 };
 
-struct Lexer{
+
+//operator = prefix_operator | infix_operator.
+//prefix_operator = "!" | "&".
+//infix_operator = "+" | "-" | "*" | "/" | "=" | "<" | ">" | "<=" | ">=" | "==" | "%".
+//separator = ";" | "{" | "}" | "(" | ")" | "[" | "]" | ",".
+//reserved_words = "let" | "if" | "else" | "do" | "for" | "i32" | "bool" | "in" | "read" | "print" | "true" | "false".
+//comment = "/*" any {comment} "*/" (* comments are ignored *).
+//any = (* anything in the alphabet *).
+//letter     = "A" | ... | "Z" | "a" | ... | "z".
+//non_zero_digit = "1" | ... | "9".
+//digit      = "0" | non_zero_digit.
+//identifier = character {letter | digit} (* no more than 256 characters *).
+//integer_constant = 0 | ["+" | "-"] non_zero_digit {digit}.
+//bool_constant = "true" | "false".
+
+struct Token{
+    enum class Kind{
+        End_Of_File,
+
+        Identifer,
+        Constasnt,
+
+        Operator_Not, // !
+        Operator_Reference, // &
+        Operator_Plus, // +
+        Operator_Minus, // -
+        Operator_Multiply, // *
+        Operator_Divide, // /
+        Operator_Assign, // = 
+        Operator_Smaller, // <
+        Operator_Greater, // >
+        Operator_Smaller_Equal, // <=
+        Operator_Greater_Equal, // >=
+        Operator_Equal, // == 
+        Operator_Modulo, // %
+
+        Keyword_Let,
+        Keyword_If,
+        Keyword_Else,
+        Keyword_Do,
+        Keyword_For,
+        Keyword_I32,
+        Keyword_Bool,
+        Keyword_In,
+        Keyword_Read,
+        Keyword_Print,
+        Keyword_True,
+        Keyword_False,
+    } kind;
+
+    union {
+        struct {
+            usize id;
+        } identifier;
+        struct {
+            usize id;
+        } constant;
+    };
+};
+
+
+struct Scanner{
     Symbol_Table table;
+    std::string source;
+    std::vector<Token> pif;
+    char  current        = 0;
+    char  peek           = 0;
+    usize source_index   = 0;
+
+static
+Scanner create(std::string source){
+    let scanner = Scanner {
+        .table = Symbol_Table::create(100),
+        .source = source,
+    };
+
+    // TODO(Ferenc): handle source.size() < 2
+    scanner.current      = source[0];
+    scanner.peek         = source[1];
+    scanner.source_index = 2;
+
+    return scanner;
+}
+
+
+#define SCAN_ONE(c, k)           \
+        {                         \
+            if (current == c){    \
+                pif.push_back({   \
+                    .kind = k,    \
+                });               \
+                next();           \
+                continue;         \
+            }                     \
+        }                         \
+
+#define SCAN_TWO(c, p, k)                      \
+        {                                      \
+            if (current == c && peek == p){    \
+                pif.push_back({                \
+                    .kind = k,                 \
+                });                            \
+                next(2);                       \
+                continue;                      \
+            }                                  \
+        }                                      
+
+#define SCAN_KEYWORD(str, expected, k)  \
+        {                               \
+            if (str == expected){       \
+                pif.push_back({         \
+                    .kind = k,          \
+                });                     \
+                continue;               \
+            }                           \
+        }
+                                       
+                                        
+void all(){                             
+    while (true) {
+        skip_whitespace();
+        if (current == 0) {
+            pif.push_back({
+                .kind = Token::Kind::End_Of_File,
+            });
+            return;
+        }
+        SCAN_TWO('<', '=', Token::Kind::Operator_Smaller_Equal);
+        SCAN_TWO('>', '=', Token::Kind::Operator_Greater_Equal);
+        SCAN_TWO('=', '=', Token::Kind::Operator_Equal);
+        SCAN_ONE('!',      Token::Kind::Operator_Not);
+        SCAN_ONE('&',      Token::Kind::Operator_Reference);
+        SCAN_ONE('+',      Token::Kind::Operator_Plus);
+        SCAN_ONE('-',      Token::Kind::Operator_Minus);
+        SCAN_ONE('*',      Token::Kind::Operator_Multiply);
+        SCAN_ONE('/',      Token::Kind::Operator_Divide);
+        SCAN_ONE('=',      Token::Kind::Operator_Assign);
+        SCAN_ONE('<',      Token::Kind::Operator_Smaller);
+        SCAN_ONE('>',      Token::Kind::Operator_Greater);
+        SCAN_ONE('%',      Token::Kind::Operator_Modulo);
+
+        std::string str = "";
+        while (!is_separator_or_operator(current)) {
+            str += current;
+            next();
+        }
+
+//reserved_words = "let" | "if" | "else" | "do" | "for" | "i32" | "bool" | "in" | "read" | "print" | "true" | "false".
+        SCAN_KEYWORD(str, "let",   Token::Kind::Keyword_Let);
+        SCAN_KEYWORD(str, "if",    Token::Kind::Keyword_If);
+        SCAN_KEYWORD(str, "else",  Token::Kind::Keyword_Else);
+        SCAN_KEYWORD(str, "do",    Token::Kind::Keyword_Do);
+        SCAN_KEYWORD(str, "for",   Token::Kind::Keyword_For);
+        SCAN_KEYWORD(str, "i32",   Token::Kind::Keyword_I32);
+        SCAN_KEYWORD(str, "bool",  Token::Kind::Keyword_Bool);
+        SCAN_KEYWORD(str, "in",    Token::Kind::Keyword_In);
+        SCAN_KEYWORD(str, "read",  Token::Kind::Keyword_Read);
+        SCAN_KEYWORD(str, "print", Token::Kind::Keyword_Print);
+        SCAN_KEYWORD(str, "true",  Token::Kind::Keyword_True);
+        SCAN_KEYWORD(str, "false", Token::Kind::Keyword_False);
+
+        lexical_error();
+    }
+}
+
+bool is_operator(char c){
+    switch (c) {
+        case '<': return true;
+        case '>': return true;
+        case '=': return true;
+        case '!': return true;
+        case '&': return true;
+        case '+': return true;
+        case '-': return true;
+        case '*': return true;
+        case '/': return true;
+        case '%': return true;
+    }        
+
+    return false;
+}
+
+bool is_separator(char c){
+    if (std::isspace(c)) return true;
+    switch (c) {
+        case ';': return true;
+        case '{': return true;
+        case '}': return true;
+        case '(': return true;
+        case ')': return true;
+        case '[': return true;
+        case ']': return true;
+        case ',': return true;
+    }
+    return false;
+}
+
+bool is_separator_or_operator(char c){
+    return is_separator(c) || is_operator(c);
+}
+
+void next(usize nr){
+    for (usize i = 0; i < nr; i++){
+        current = peek;
+        if (source_index >= source.size()) {
+            peek = 0;
+            return;
+        }
+        peek = source[source_index];
+        source_index++;
+    }
+}
+
+void next(){
+    next(1);
+}
+
+void skip_whitespace(){
+    while (std::isspace(current)) {
+        next();
+    }
+}
+
+void lexical_error(){
+    std::cout << "Lexical error (implement line)" << std::endl;
+    exit(-1);
+}
+
+
 };
 
 
 int main(){
+    let scanner = Scanner::create("for in let i32 bool== = < = <= >= !& \n /  ");
+    scanner.all();
+    std::cout << scanner.pif.size() << std::endl;
 }
