@@ -9,15 +9,16 @@ Lexic:
 
 operator = prefix_operator | infix_operator.
 prefix_operator = "!" | "&".
-infix_operator = "+" | "-" | "*" | "/" | "=" | "<" | ">" | "<=" | ">=" | "==" | "%".
+infix_operator = "+" | "-" | "*" | "/" | "=" | "<" | ">" | "<=" | ">=" | "!=" | "==" | "%".
 separator = ";" | "{" | "}" | "(" | ")" | "[" | "]" | ",".
 reserved_words = "let" | "if" | "else" | "do" | "for" | "i32" | "bool" | "in" | "read" | "print" | "true" | "false".
 comment = "/*" any {comment} "*/" (* comments are ignored *).
 any = (* anything in the alphabet *).
 letter     = "A" | ... | "Z" | "a" | ... | "z".
+character  = letter | "_".
 non_zero_digit = "1" | ... | "9".
 digit      = "0" | non_zero_digit.
-identifier = character {letter | digit} (* no more than 256 characters *).
+identifier = character {character | digit} (* no more than 256 characters *).
 integer_constant = 0 | ["+" | "-"] non_zero_digit {digit}.
 bool_constant = "true" | "false".
 

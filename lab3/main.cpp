@@ -273,7 +273,9 @@ Scanner create(std::string source){
                                         
 void all(){                             
     while (true) {
-        skip_whitespace();
+        if (skip_whitespace()) continue;
+        if (skip_comment()) continue;
+
         if (current == 0) {
             pif.push_back({
                 .kind = Token::Kind::End_Of_File,
@@ -426,11 +428,33 @@ void next(){
     next(1);
 }
 
-void skip_whitespace(){
+bool skip_whitespace(){
+    let skipped = false;
     while (std::isspace(current)) {
         next();
+        skipped = true;
     }
+    return skipped;
 }
+
+bool skip_comment(){
+    if (this->current != '/') return false;
+    if (this->peek != '*') return false;
+    next(2);
+    usize nest = 1;
+    while (nest > 0) {
+        if (this->current == '/' &&
+            this->peek    == '*') 
+            nest++;
+        else if (this->current == '*' &&
+                 this->peek    == '/') 
+            nest--;
+        next();
+    }
+    next();
+    return true;
+}
+
 
 void lexical_error(std::string str){
     usize line = 1;
@@ -458,7 +482,7 @@ void print_pif(PIF pif){
 
 int main(int argc, char** argv){
     if (argc == 1){
-        let scanner = Scanner::create(" let a = 12;");
+        let scanner = Scanner::create(" /* /*asd asd */asd */ /*    */ let a = 12;");
         scanner.all();
         print_pif(scanner.pif);
         return 0;
