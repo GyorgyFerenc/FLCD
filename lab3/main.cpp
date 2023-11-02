@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <ostream>
 #include <regex>
 #include <string>
 #include <vector>
@@ -471,12 +472,24 @@ void lexical_error(std::string str){
 };
 
 
-void print_pif(PIF pif){
+void print_pif(PIF pif, std::ostream& os){
     for (let token : pif){
-        std::cout << "Token{" << std::endl;
-        std::cout << "    .kind = " << (usize)token.kind << std::endl;
-        std::cout << "    .str  = \"" << token.str << "\"" << std::endl;
-        std::cout << "}" << std::endl;
+        os << "Token{" << std::endl;
+        os << "    .kind = " << (usize)token.kind << std::endl;
+        os << "    .str  = \"" << token.str << "\"" << std::endl;
+        os << "}" << std::endl;
+    }
+}
+
+void print_symbol_table(Symbol_Table table, std::ostream& os){
+    os << "Symbol Table" << std::endl;
+    os << "Identifiers:" <<  std::endl;
+    for (usize i = 0; i < table.identifiers.size; i++){
+        os << i << " | " << table.identifiers.values[i].str << std::endl;
+    }
+    os << "Constants:" <<  std::endl;
+    for (usize i = 0; i < table.constants.size; i++){
+        os << i << " | " << table.constants.values[i].str << std::endl;
     }
 }
 
@@ -484,7 +497,7 @@ int main(int argc, char** argv){
     if (argc == 1){
         let scanner = Scanner::create(" /* /*asd asd */asd */ /*    */ let a = 12;");
         scanner.all();
-        print_pif(scanner.pif);
+        print_pif(scanner.pif, std::cout);
         return 0;
     }
 
@@ -494,5 +507,7 @@ int main(int argc, char** argv){
     let source = buffer.str();
     let scanner = Scanner::create(source);
     scanner.all();
-    print_pif(scanner.pif);
+    print_pif(scanner.pif, std::cout);
+    print_symbol_table(scanner.table, std::cout);
+    std::cout << "Lexically correct" << std::endl;
 }
