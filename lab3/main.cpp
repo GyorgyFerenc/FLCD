@@ -507,7 +507,14 @@ int main(int argc, char** argv){
     let source = buffer.str();
     let scanner = Scanner::create(source);
     scanner.all();
+
+    std::ofstream pif{"PIF.out"};
     print_pif(scanner.pif, std::cout);
+    print_pif(scanner.pif, pif);
+
+    std::ofstream st{"ST.out"};
     print_symbol_table(scanner.table, std::cout);
+    print_symbol_table(scanner.table, st);
+
     std::cout << "Lexically correct" << std::endl;
 }

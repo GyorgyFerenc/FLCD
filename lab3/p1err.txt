@@ -1,0 +1,5 @@
+/*
+    12a is not a correct identifier
+*/
+
+let 12a = 12;

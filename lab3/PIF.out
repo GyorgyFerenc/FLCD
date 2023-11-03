@@ -1,0 +1,184 @@
+Token{
+    .kind = 25
+    .str  = "let"
+}
+Token{
+    .kind = 1
+    .str  = "a"
+}
+Token{
+    .kind = 30
+    .str  = "i32"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 25
+    .str  = "let"
+}
+Token{
+    .kind = 1
+    .str  = "b"
+}
+Token{
+    .kind = 30
+    .str  = "i32"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 33
+    .str  = "read"
+}
+Token{
+    .kind = 20
+    .str  = "("
+}
+Token{
+    .kind = 4
+    .str  = "&"
+}
+Token{
+    .kind = 1
+    .str  = "a"
+}
+Token{
+    .kind = 21
+    .str  = ")"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 33
+    .str  = "read"
+}
+Token{
+    .kind = 20
+    .str  = "("
+}
+Token{
+    .kind = 4
+    .str  = "&"
+}
+Token{
+    .kind = 1
+    .str  = "b"
+}
+Token{
+    .kind = 21
+    .str  = ")"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 25
+    .str  = "let"
+}
+Token{
+    .kind = 1
+    .str  = "c"
+}
+Token{
+    .kind = 30
+    .str  = "i32"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 26
+    .str  = "if"
+}
+Token{
+    .kind = 1
+    .str  = "a"
+}
+Token{
+    .kind = 10
+    .str  = "<"
+}
+Token{
+    .kind = 1
+    .str  = "b"
+}
+Token{
+    .kind = 18
+    .str  = "{"
+}
+Token{
+    .kind = 1
+    .str  = "c"
+}
+Token{
+    .kind = 9
+    .str  = "="
+}
+Token{
+    .kind = 1
+    .str  = "a"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 19
+    .str  = "}"
+}
+Token{
+    .kind = 27
+    .str  = "else"
+}
+Token{
+    .kind = 28
+    .str  = "do"
+}
+Token{
+    .kind = 1
+    .str  = "c"
+}
+Token{
+    .kind = 9
+    .str  = "="
+}
+Token{
+    .kind = 1
+    .str  = "b"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 34
+    .str  = "print"
+}
+Token{
+    .kind = 20
+    .str  = "("
+}
+Token{
+    .kind = 1
+    .str  = "c"
+}
+Token{
+    .kind = 21
+    .str  = ")"
+}
+Token{
+    .kind = 17
+    .str  = ";"
+}
+Token{
+    .kind = 0
+    .str  = ""
+}

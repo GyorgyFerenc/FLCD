@@ -1,0 +1,9 @@
+let a = []i32{1, 2, 3, 4};
+let max i32 = 0;
+
+for el in a {
+    if max < el do
+        max = el;
+}
+
+print(max);
