@@ -24,5 +24,46 @@ Hash_Table:
         std::string get(usize index)
             - It returns the string contained at the index.
             The index is remain VALID even if the table growths.
+Scanner:
+    Fields:
+        std::string source
+            - The source of where tokens will be scanned from.
+        PIF pif
+            - The tokens that are scanned from source.
+        Symbol_Table table
+            - The symbol table that will be filled up.
+
+    Functions:
+        static Scanner create(std::string source)
+            - It creates a scanner over the source provided.
+
+        void all()
+            - It scans the tokens from source and puts it into the field pif.
+              It fills up the the symbol table as well.
+
+PIF:
+    is std::vector<Token>.
+
+Token:
+    Fields:
+        Kind kind
+            - The kind of the token.
+        std::string str;
+            - The str representation of the token.
+    
+        union 
+            identifier
+                - If the kind is Identifier then the token has this field.
+            constant
+                - If the kind is Constant then the token has this field.
+
+Symbol_Table:
+    Hash_Table identifiers;
+        - The identifiers scanned.
+    Hash_Table constants;
+        - The constants scanned.
+
+
+
 
 
