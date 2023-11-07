@@ -150,6 +150,11 @@ struct Symbol_Table{
             .constants   = Hash_Table::create(capacity),
         };
     }
+
+    void destroy(){
+        identifiers.destroy();
+        constants.destroy();
+    }
 };
 
 
@@ -235,6 +240,9 @@ Scanner create(std::string source){
     return scanner;
 }
 
+void destroy(){
+    table.destroy();
+}
 
 #define SCAN_ONE(c, k)                         \
         {                                      \
