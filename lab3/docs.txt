@@ -25,6 +25,7 @@ Hash_Table:
             - It returns the string contained at the index.
             The index is remain VALID even if the table growths.
 Scanner:
+
     Fields:
         std::string source
             - The source of where tokens will be scanned from.
@@ -40,6 +41,13 @@ Scanner:
         void all()
             - It scans the tokens from source and puts it into the field pif.
               It fills up the the symbol table as well.
+    RegExes:
+        integer: "0|[+-]?[1-9][0-9]*"
+            - It matches sequence one or sequence two. The first is the character 0.
+            The second starts with + or - optionally than a digit except 0 and after that a digit any number of times.
+        identifer: "[A-Za-z_][A-Za-z_0-9]*"
+            - It matches any captial or small letter or underscore.
+            After that it mathces any number of captial or small letter or underscore or digits.
 
 PIF:
     is std::vector<Token>.
