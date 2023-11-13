@@ -1,0 +1,6 @@
+fa = initial_state final_states edges.
+initial_state = character ";".
+final_states  = character {character} ";".
+edges = {edge ","} ";".
+edge  = character ":" character "-" character.
+character = "A" | ... | "Z" | "a" | ... | "z" | "0" | ... | "9".
