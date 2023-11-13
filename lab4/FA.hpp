@@ -115,11 +115,16 @@ FA read_from_file(std::string file){
     }
 
     char current_expect_character(){
-        let greater = 'A' <= current && current < 'Z';
-        let smaller = 'a' <= current && current < 'z';
-        let digit   = '0' <= current && current < '9';
-        assert(greater || smaller || digit);
-        return this->current;
+        let greater    = 'A' <= current && current <= 'Z';
+        let smaller    = 'a' <= current && current <= 'z';
+        let digit      = '0' <= current && current <= '9';
+        let underscore = current == '_';
+        let plus       = current == '+';
+        let minus      = current == '-';
+        if (greater || smaller || digit || underscore || plus || minus) 
+            return this->current;
+        std::cout << "Error: current was " << current;
+        exit(-1);
     }
 
     };
@@ -158,8 +163,6 @@ FA read_from_file(std::string file){
         scanner.next();
 
         let start = scanner.current_expect_character();       
-        scanner.next();
-        scanner.current_expect('-');
         scanner.next();
 
         let end = scanner.current_expect_character();       

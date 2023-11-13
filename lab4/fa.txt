@@ -1,6 +1,6 @@
 a;
 c d;
-a: a - a
-a: a - b
-a: b - c
-b: b - d;
+a: a  a
+a: a  b
+a: b  c
+b: b  d;

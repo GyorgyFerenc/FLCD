@@ -1,0 +1,37 @@
+a;
+b c;
+0: a b
+
+1: a c
+2: a c
+3: a c
+4: a c
+5: a c
+6: a c
+7: a c
+8: a c
+9: a c
+
++: a d
+-: a d
+
+1: d c
+2: d c
+3: d c
+4: d c
+5: d c
+6: d c
+7: d c
+8: d c
+9: d c
+
+0: c c
+1: c c
+2: c c
+3: c c
+4: c c
+5: c c
+6: c c
+7: c c
+8: c c
+9: c c;
