@@ -1,0 +1,35 @@
+Grammar_Elem:
+    Kind:
+        - Nonterminal
+        - Terminal
+     -> the kind of the elem
+
+     std::string str 
+       -> the string representation
+
+Grammar_Production:
+    Grammar_Elem nonterminal;
+      -> the nonterminal at the left hand side of the production
+    std::vector<Grammar_Elem> elems;
+      -> the list of elems at the right hand side of the production
+
+Gramar:
+    Grammar_Elem starting_nonterminal;
+        -> starting nonterminal
+    std::vector<Grammar_Elem>       elems;
+        -> the elems
+    std::vector<Grammar_Production> productions;
+        -> the productions
+
+    
+    Grammar Grammar_read_from_file(std::string path)
+        -> reads the grammar from a file with the syntax of
+            grammar = starting_nonterminal productions.
+            starting_nonterminal = "starting_nonterminal:" nonterminal ";".
+            productions = "productions:" {production} ";".
+            prodcution  = nonterminal ":" {(nonterminal | terminal) "," } ";".
+            nonterminal = (letter | digit) { (letter | digit) }.
+            digit  = "0" | ... | "9".
+            letter = "a" | ... | "z" | 
+                     "A" | ... | "Z".
+            terminal = "\"" (* any character except "*) "\"".

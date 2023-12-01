@@ -163,24 +163,6 @@ Grammar Grammar_read_from_file(std::string path){
     };
     Scanner_next(&scanner);
 
-    //assert(Scanner_match(&scanner, "nonterminals:"));
-    //while (scanner.current != ';') {
-    //    let non_terminal = scan_non_terminal(&scanner);
-    //    grammar.elems.push_back(non_terminal);
-    //    Scanner_current_expect(scanner, ',');
-    //    Scanner_next(&scanner);
-    //}
-    //Scanner_next(&scanner);
-    //
-    //assert(Scanner_match(&scanner, "terminals:"));
-    //while (scanner.current != ';') {
-    //    let terminal = scan_terminal(&scanner);
-    //    grammar.elems.push_back(terminal);
-    //    Scanner_current_expect(scanner, ',');
-    //    Scanner_next(&scanner);
-    //}
-    //Scanner_next(&scanner);
-
     assert(Scanner_match(&scanner, "starting_nonterminal:"));
     let starting = scan_non_terminal(&scanner);
     Scanner_current_expect(scanner, ';');
@@ -276,6 +258,11 @@ bool Grammar_cfg_check(Grammar grammar){
 
     return true;
 }
+
+struct Recursive_Descent_Parser{
+
+};
+
 
 int main(){
     let grammar = Grammar_read_from_file("g1.txt");
