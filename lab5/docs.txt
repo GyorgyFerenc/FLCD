@@ -33,3 +33,6 @@ Gramar:
             letter = "a" | ... | "z" | 
                      "A" | ... | "Z".
             terminal = "\"" (* any character except "*) "\"".
+
+    bool Grammar_cfg_check(Grammar grammar)
+        -> checks if the grammar is cfg
