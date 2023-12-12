@@ -1,10 +1,24 @@
 #include <algorithm>
 #include <fstream>
+#include <ostream>
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include <stack>
 #include <string_view>
 #include <vector>
+
+template <class T>
+struct Option{
+    bool some;
+    T value;
+
+    T unwrap(){
+        if (some) return value;
+        assert(false);
+    }
+};
+
 
 using uint = unsigned int;
 using i8 = int8_t;
@@ -186,8 +200,8 @@ Grammar Grammar_read_from_file(std::string path){
                 elem = scan_terminal(&scanner);
             else 
                 elem = scan_non_terminal(&scanner);
-            //production.elems.push_back(elem);
-            add_to_elems(&production.elems, elem);
+            production.elems.push_back(elem);
+            //add_to_elems(&production.elems, elem);
             add_to_elems(&grammar.elems, elem);
 
             Scanner_current_expect(scanner, ',');
@@ -233,6 +247,19 @@ void Grammar_print(Grammar grammar){
     std::cout << "starting nonterminal: " << grammar.starting_nonterminal.str << std::endl;
 }
 
+Option<Grammar_Production> Grammar_get_production(Grammar grammar, Grammar_Elem nonterminal, usize i = 0){
+    assert(nonterminal.kind == Grammar_Elem::Kind::Nonterminal);
+    for (let prod : grammar.productions){
+        if (prod.nonterminal.str == nonterminal.str){
+            if (i == 0)
+                return {true, prod};
+            else i--;
+        }
+    }
+
+    return {false};
+}
+
 bool Grammar_cfg_check(Grammar grammar){
     let check = [](std::vector<Grammar_Elem>* v, Grammar_Elem elem){
         let pos = std::find_if(
@@ -259,13 +286,229 @@ bool Grammar_cfg_check(Grammar grammar){
     return true;
 }
 
-struct Recursive_Descent_Parser{
-
+enum struct RDP_State{
+    Normal,
+    Final,
+    Back,
+    Error,
 };
 
+struct RDP_Elem{
+    Grammar_Elem elem;
+
+    /* if elem is a nonterminal we need to store which 
+     * production needs to be used because if we
+     * go back we need to move to the next one */
+    usize production_i = 0; 
+};
+
+struct Recursive_Descent_Parser{
+    RDP_State state;
+    usize i = 0;
+    std::vector<RDP_Elem> working_stack;
+    std::vector<RDP_Elem> input_stack;
+
+    std::string sequence;
+    Grammar grammar;
+};
+
+Recursive_Descent_Parser RDP_create(Grammar grammar, std::string sequence){
+    let rdp =  Recursive_Descent_Parser{
+        .state = RDP_State::Normal,
+        .i = 0,
+        .sequence = sequence,
+        .grammar = grammar,
+    };
+    rdp.input_stack.push_back({grammar.starting_nonterminal, 0});
+    return rdp;
+}
+
+void RDP_step(Recursive_Descent_Parser* rdp){
+    switch (rdp->state) {
+    case RDP_State::Normal:{
+        if (rdp->input_stack.empty()){
+            if (rdp->i == rdp->sequence.size()) {
+                rdp->state = RDP_State::Final;
+            } else {
+                rdp->state = RDP_State::Error;
+            }
+            break;
+        }
+
+
+        let head = rdp->input_stack.back();
+        switch (head.elem.kind) {
+        case Grammar_Elem::Kind::Nonterminal:{
+            rdp->input_stack.pop_back();
+
+            let production = Grammar_get_production(
+                rdp->grammar, 
+                head.elem, head.production_i
+            ).unwrap();
+
+            for (let i = 0; i < production.elems.size(); i++){
+                let pos = production.elems.size() - i - 1;
+                rdp->input_stack.push_back(RDP_Elem{
+                    .elem = production.elems[pos],
+                    .production_i = 0,
+                });
+            }
+
+            rdp->working_stack.push_back(head);
+
+        }break;
+        case Grammar_Elem::Kind::Terminal:{
+            let terminal = head.elem.str[0]; // terminal is a character
+            if (terminal == rdp->sequence[rdp->i]){
+                rdp->input_stack.pop_back();
+                rdp->i++;
+                rdp->working_stack.push_back(head);
+            }else {
+                rdp->state = RDP_State::Back;
+            }
+        }break;
+        }
+    }break;
+
+    case RDP_State::Back:{
+        let head = &rdp->working_stack.back();
+        switch (head->elem.kind) {
+        case Grammar_Elem::Kind::Nonterminal:{
+            //clean top
+            {
+                let production = Grammar_get_production(
+                    rdp->grammar, 
+                    head->elem, head->production_i
+                ).unwrap();
+                for (let i = 0; i < production.elems.size(); i++){
+                    rdp->input_stack.pop_back();
+                }
+            }
+
+            head->production_i++;
+
+            let production_option = Grammar_get_production(
+                rdp->grammar, 
+                head->elem, head->production_i
+            );
+
+            if (production_option.some){
+                let production = production_option.value;
+                for (let i = 0; i < production.elems.size(); i++){
+                    let pos = production.elems.size() - i - 1;
+                    rdp->input_stack.push_back(RDP_Elem{
+                        .elem = production.elems[pos],
+                        .production_i = 0,
+                    });
+                }
+                rdp->state = RDP_State::Normal;
+            } else if (rdp->grammar.starting_nonterminal.str == head->elem.str && rdp->i == 0){
+                rdp->state = RDP_State::Error;
+            } else {
+                rdp->working_stack.pop_back();
+                rdp->input_stack.push_back({head->elem, 0});
+            }
+        }break;
+        case Grammar_Elem::Kind::Terminal:{
+            rdp->i--;
+            rdp->working_stack.pop_back();
+            rdp->input_stack.push_back(*head);
+        }break;
+        }
+
+    }break;
+
+    case RDP_State::Error:{
+
+    }break;
+
+    case RDP_State::Final:{
+
+    }break;
+    }
+}
+
+void RDP_print(Recursive_Descent_Parser rdp){
+    let tab = [](){std::cout << "    ";};
+    std::cout << "Recursive_Descent_Parser{" << std::endl;
+    tab();
+    std::cout << ".state = ";
+    switch (rdp.state) {
+    case RDP_State::Normal: std::cout << "Normal" << std::endl; break;
+    case RDP_State::Back: std::cout << "Back" << std::endl; break;
+    case RDP_State::Error: std::cout << "Error" << std::endl; break;
+    case RDP_State::Final: std::cout << "Final" << std::endl; break;
+    }
+    tab();
+    std::cout << ".i = " << rdp.i << std::endl;
+    tab();
+    std::cout << ".sequence = " << rdp.sequence << std::endl;
+    tab();
+    std::cout << ".input_stack = [" << std::endl;
+    for (let el : rdp.input_stack){
+        tab(); tab();
+        std::cout << el.elem.str << ", "<< std::endl;
+    }               
+    tab();
+    std::cout << "]" <<std::endl;
+    tab();
+    std::cout << ".working_stack = [ " << std::endl;
+    for (let el : rdp.working_stack){
+        tab(); tab();
+        std::cout << el.elem.str << ", "<< std::endl;
+    }               
+    tab();
+    std::cout << "]" <<std::endl;
+    std::cout << "}" <<std::endl;
+                    
+}
+
+void test(){
+    let grammar = Grammar_read_from_file("g1.txt");
+    {
+        let rdp = RDP_create(grammar, "ac");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Final);
+    }
+    {
+        let rdp = RDP_create(grammar, "acbc");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Final);
+    }
+    {
+        let rdp = RDP_create(grammar, "aacbc");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Final);
+    }
+    {
+        let rdp = RDP_create(grammar, "ca");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Error);
+    }
+    {
+        let rdp = RDP_create(grammar, "a");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Error);
+    }
+    {
+        let rdp = RDP_create(grammar, "aca");
+        while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+            RDP_step(&rdp);
+        }
+        assert(rdp.state == RDP_State::Error);
+    }
+}
 
 int main(){
-    let grammar = Grammar_read_from_file("g1.txt");
-    Grammar_print(grammar);
-    std::cout << "is cfg: " << Grammar_cfg_check(grammar) << std::endl;
+    test();
 }

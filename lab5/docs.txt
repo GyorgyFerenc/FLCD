@@ -36,3 +36,26 @@ Gramar:
 
     bool Grammar_cfg_check(Grammar grammar)
         -> checks if the grammar is cfg
+
+    Option<Grammar_Production> Grammar_get_production(Grammar grammar, Grammar_Elem nonterminal, usize i = 0)
+        -> Gets the i-th production of the nonterminal from the grammar if exists
+
+Recursive_Descent_Parser:
+    RDP_State state;
+    usize i = 0;
+        -> Position in sequence
+    std::vector<RDP_Elem> working_stack;
+    std::vector<RDP_Elem> input_stack;
+
+    std::string sequence;
+    Grammar grammar;
+        -> Grammar used for parsing
+
+    Recursive_Descent_Parser RDP_create(Grammar grammar, std::string sequence)
+        -> Creates a parser
+
+    void RDP_step(Recursive_Descent_Parser* rdp)
+        -> Does one step
+
+    void RDP_print(Recursive_Descent_Parser rdp)
+        -> Prints the parser
