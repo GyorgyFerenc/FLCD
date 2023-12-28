@@ -59,3 +59,18 @@ Recursive_Descent_Parser:
 
     void RDP_print(Recursive_Descent_Parser rdp)
         -> Prints the parser
+
+    Recursive_Descent_Parser rdp_parse(Grammar grammar, std::string sequence);
+        -> Parses the sequence using the specified grammar.
+            Returns the parser. It is either in Error or Final state.
+
+    Node rdp_create_tree(Recursive_Descent_Parser parser)
+        -> Creates the node tree from the parser.
+            The parser must be in his Final state.
+
+Node:
+    Grammar_Elem elem;
+    std::vector<Node> children;
+
+    void node_print(Node node, usize tab = 0)
+        -> prints the node in a tree-like fashion.

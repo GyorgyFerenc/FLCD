@@ -461,7 +461,6 @@ void RDP_print(Recursive_Descent_Parser rdp){
                     
 }
 
-using Table_Index = int;
 struct Node{
     Grammar_Elem elem;
     std::vector<Node> children;
