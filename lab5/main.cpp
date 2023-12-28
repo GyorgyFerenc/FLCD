@@ -110,9 +110,6 @@ struct Grammar{
     std::vector<Grammar_Production> productions;
 };
 
-
-
-
 Grammar Grammar_read_from_file(std::string path){
     let scan_non_terminal = [](Scanner* scanner) -> Grammar_Elem{
         let is_non_terminal_character = [](char chr){
@@ -346,6 +343,7 @@ void RDP_step(Recursive_Descent_Parser* rdp){
                 head.elem, head.production_i
             ).unwrap();
 
+
             for (let i = 0; i < production.elems.size(); i++){
                 let pos = production.elems.size() - i - 1;
                 rdp->input_stack.push_back(RDP_Elem{
@@ -463,6 +461,80 @@ void RDP_print(Recursive_Descent_Parser rdp){
                     
 }
 
+using Table_Index = int;
+struct Node{
+    Grammar_Elem elem;
+    std::vector<Node> children;
+};
+
+void node_print(Node node, usize tab = 0){
+    let print_tab = [](usize tab){
+        for (let i = 0; i < tab; i++)
+            std::cout << " ";
+    };
+
+    print_tab(tab);
+    std::cout << node.elem.str;
+    if (node.elem.kind == Grammar_Elem::Kind::Nonterminal){
+        std::cout << " -> {" << std::endl;
+        for (let child : node.children) {
+            print_tab(tab + 1);
+            node_print(child, tab + 1);
+        }
+        print_tab(tab);
+        std::cout << "}";
+    }
+    std::cout << "," << std::endl;
+}
+
+
+void rdp_create_tree_aux(Node* current, Recursive_Descent_Parser parser, usize* i){
+    let rdp_elem = parser.working_stack[*i];
+    let grammar_elem = rdp_elem.elem;
+    assert(grammar_elem.kind == Grammar_Elem::Kind::Nonterminal);
+    current->elem = grammar_elem;
+
+    let production = Grammar_get_production(parser.grammar, grammar_elem, rdp_elem.production_i)
+                        .unwrap();
+
+    for (let prod_elem : production.elems){
+        (*i)++;
+        let g = parser.working_stack[*i];
+        assert(g.elem.kind == prod_elem.kind);
+
+        if (prod_elem.kind == Grammar_Elem::Kind::Terminal){
+            let node = Node{
+                .elem = g.elem,
+            };
+            current->children.push_back(node);
+        } else if (prod_elem.kind == Grammar_Elem::Kind::Nonterminal){
+            let node = Node{
+                .elem = g.elem,
+            };
+            rdp_create_tree_aux(&node, parser, i);
+            current->children.push_back(node);
+        }
+    }
+}
+
+Node rdp_create_tree(Recursive_Descent_Parser parser){
+    assert(parser.state == RDP_State::Final);
+
+    Node root;
+    usize i = 0;
+    rdp_create_tree_aux(&root, parser, &i);
+    return root;
+}
+
+Recursive_Descent_Parser rdp_parse(Grammar grammar, std::string sequence){
+    let rdp = RDP_create(grammar, sequence);
+    while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+        RDP_step(&rdp);
+    }
+
+    return rdp;
+}
+
 void test(){
     let grammar = Grammar_read_from_file("g1.txt");
     {
@@ -478,6 +550,7 @@ void test(){
             RDP_step(&rdp);
         }
         assert(rdp.state == RDP_State::Final);
+        RDP_print(rdp);
     }
     {
         let rdp = RDP_create(grammar, "aacbc");
@@ -510,5 +583,11 @@ void test(){
 }
 
 int main(){
-    test();
+    //test();
+
+    let grammar = Grammar_read_from_file("g1.txt");
+    let rdp     = rdp_parse(grammar, "acbc");
+    let root    = rdp_create_tree(rdp);
+
+    node_print(root);
 }

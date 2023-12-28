@@ -46,4 +46,5 @@ productions:
     Array_Expression: Array_Type, "{", Expression_List, "}", ;
     Expression_List: Expression, ;
     Expression_List: Expression, ",", Expression_List, ;
+    Identifier: "a", ;
 ;
