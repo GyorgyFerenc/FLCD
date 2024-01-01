@@ -1,5 +1,6 @@
 starting_nonterminal: Program;
 productions:
+    Space: " ", ;
     One_More_Statement: Statement, ;
     One_More_Statement: Statement, One_More_Statement, ;
     Program:   One_More_Statement, ;
@@ -10,10 +11,10 @@ productions:
     Statement: Print, ;
     Statement: Expression_Statement, ;
     Let: "l", "e", "t", ;
-    Variable_Declaration: Let, Identifier, Aux1, ";", ;
+    Variable_Declaration: Let, Space, Identifier, Space, Aux1, ";", ;
     Aux1: Type, ;
-    Aux1: Type, "=", Expression, ;
-    Aux1: "=", Expression, ;
+    Aux1: Type, Space, "=", Space, Expression, ;
+    Aux1: "=", Space, Expression, ;
     Type: "i", "3", "2", ;
     Type: "b", "o", "o", "l", ;
     Type: Array_Type, ;
@@ -30,16 +31,16 @@ productions:
     Print: "p", "r", "i", "n", "t", "(", Expression, ")", ";", ;
     Read: "r", "e", "a", "d", "(", Expression, ")", ";", ;
     Expression_Statement: Expression, ";", ;
-    Expression: Prefix_Expression,
-                Variable_Expression,
-                Constant_Expression,
-                Infix_Expression,
-                Group_Expression,
-                Array_Expression,
-                ;
+    Expression: Constant_Expression, ;
+    Expression: Prefix_Expression, ;
+    Expression: Variable_Expression, ;
+    Expression: Infix_Expression, ;
+    Expression: Group_Expression, ;
+    Expression: Array_Expression, ;
     Prefix_Expression: Prefix_Operator, Expression, ;
     Variable_Expression: Identifier, ;
-    Constant_Expression: Integer_Constant, Bool_Constant, ;
+    Constant_Expression: Integer_Constant, ;
+    Constant_Expression: Bool_Constant, ;
     Infix_Expression: Expression, Infix_Operator, Experession, ;
     Group_Expression: "(", Expression, ")", ;
     Array_Expression: Array_Type, "{", "}", ;
@@ -47,4 +48,10 @@ productions:
     Expression_List: Expression, ;
     Expression_List: Expression, ",", Expression_List, ;
     Identifier: "a", ;
+    Prefix_Operator: "-", ;
+    Prefix_Operator: "+", ;
+    Prefix_Operator: "!", ;
+    Integer_Constant: "1", ;
+    Bool_Constant: "t", "r", "u", "e", ;
+    Bool_Constant: "f", "a", "l", "s", "e", ;
 ;

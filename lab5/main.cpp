@@ -48,6 +48,15 @@ void Scanner_next(Scanner* scanner, usize n = 1){
     }
 }
 
+void Scanner_next_raw(Scanner* scanner, usize n = 1){
+    for (usize i = 0; i < n; i++){
+        if (scanner->source.empty()) scanner->current = 0;
+        else scanner->current = scanner->source[0];
+        scanner->source.remove_prefix(1);
+
+        //if (std::isspace(scanner->current)) i--; // skip whitespace
+    }
+}
 
 char Scanner_current_expect(Scanner scanner, char chr){
     assert(chr == scanner.current && "current_expect");
@@ -134,12 +143,12 @@ Grammar Grammar_read_from_file(std::string path){
     };
     let scan_terminal = [](Scanner* scanner) -> Grammar_Elem{
         Scanner_current_expect(*scanner, '\"');
-        Scanner_next(scanner);
+        Scanner_next_raw(scanner);
         std::string str;
 
         while (scanner->current != '\"') {
             str += scanner->current;
-            Scanner_next(scanner);
+            Scanner_next_raw(scanner);
         }
         Scanner_next(scanner);
 
@@ -528,6 +537,7 @@ Node rdp_create_tree(Recursive_Descent_Parser parser){
 Recursive_Descent_Parser rdp_parse(Grammar grammar, std::string sequence){
     let rdp = RDP_create(grammar, sequence);
     while (rdp.state != RDP_State::Error && rdp.state != RDP_State::Final) {
+        //RDP_print(rdp);
         RDP_step(&rdp);
     }
 
@@ -549,7 +559,6 @@ void test(){
             RDP_step(&rdp);
         }
         assert(rdp.state == RDP_State::Final);
-        RDP_print(rdp);
     }
     {
         let rdp = RDP_create(grammar, "aacbc");
@@ -584,9 +593,8 @@ void test(){
 int main(){
     //test();
 
-    let grammar = Grammar_read_from_file("g1.txt");
-    let rdp     = rdp_parse(grammar, "acbc");
+    let grammar = Grammar_read_from_file("minilang.txt");
+    let rdp     = rdp_parse(grammar, "let a []i32 = 1;");
     let root    = rdp_create_tree(rdp);
-
     node_print(root);
 }
