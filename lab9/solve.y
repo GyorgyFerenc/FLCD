@@ -51,9 +51,6 @@
 
 %%
 
-
-program = statement {statement}.
-
 program : statement+ ;
 statement : variable_declaration |
 	        block |
